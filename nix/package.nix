@@ -7,7 +7,6 @@
   fetchFromGitHub,
   iconConvTools,
   copyDesktopItems,
-  makeDesktopItem,
   libx11,
   libice,
   libsm,
@@ -38,11 +37,12 @@
   soundfont-path ? "${soundfont-fluid}/share/soundfonts/FluidR3_GM2-2.sf2",
 }:
 let
-  pname = "space-station-14-launcher";
-  version = "0.39.0";
+  pname = "SS14.Launcher";
+  version = "0.39.1";
+  buildType = "Release";
 in
-buildDotnetModule rec {
-  inherit pname;
+buildDotnetModule {
+  inherit pname buildType;
 
   # Workaround to prevent buildDotnetModule from overriding assembly versions.
   # If you inherit version it will break loading Robust.LoaderApi when connecting to a server!
@@ -51,12 +51,11 @@ buildDotnetModule rec {
   src = fetchFromGitHub {
     owner = "space-wizards";
     repo = "SS14.Launcher";
-    tag = "v${version}";
-    hash = "sha256-i5jcaB1wa+Toj6orpEQ9sK3EX1CLWadnhTEQDOU7QU4=";
+    rev = "d34d29f4bf2d6dc88595c0987533744ff1cc9135";
+    hash = "sha256-8rea2CHzGWQa9mxq4+krtYBjvQYiDbnVDbB34mSiTBc=";
     fetchSubmodules = true;
   };
 
-  buildType = "Release";
   selfContainedBuild = false;
 
   projectFile = [
@@ -71,7 +70,6 @@ buildDotnetModule rec {
   };
 
   dotnet-sdk = dotnetCorePackages.sdk_10_0;
-  dotnet-runtime = dotnetCorePackages.runtime_10_0;
 
   dotnetFlags = [
     "-p:FullRelease=true"
@@ -114,28 +112,18 @@ buildDotnetModule rec {
 
   executables = [ "SS14.Launcher" ];
 
-  desktopItems = [
-    (makeDesktopItem {
-      name = pname;
-      exec = meta.mainProgram;
-      icon = pname;
-      desktopName = "Space Station 14 Launcher";
-      comment = meta.description;
-      categories = [ "Game" ];
-      startupWMClass = meta.mainProgram;
-    })
-  ];
+  desktopItems = [ "PublishFiles/SS14.desktop" ];
 
   postInstall = ''
-    mkdir -p $out/lib/space-station-14-launcher/loader
-    cp -r SS14.Loader/bin/${buildType}/*/*/* $out/lib/space-station-14-launcher/loader/
+    mkdir -p $out/lib/SS14.Launcher/loader
+    cp -r SS14.Loader/bin/${buildType}/*/*/* $out/lib/SS14.Launcher/loader/
 
-    icoFileToHiColorTheme SS14.Launcher/Assets/icon.ico ${pname} $out
+    icoFileToHiColorTheme SS14.Launcher/Assets/icon.ico SS14 $out
   '';
 
   meta = {
     description = "Launcher for Space Station 14, a multiplayer game about paranoia and disaster";
-    homepage = "https://spacestation14.io";
+    homepage = "https://spacestation14.com";
     license = lib.licenses.mit;
     maintainers = [ ];
     platforms = [ "x86_64-linux" ];
